@@ -46,7 +46,8 @@ import assert from "node:assert"
 //                                                                             *
 // Example                                                                     *
 // Initialise                                                                  *
-// carpark = [[1, 0, 0, 0, 2], [0, 0, 0, 0, 0]];                               *
+// carpark = [[1, 0, 0, 0, 2],                                                 *
+//            [0, 0, 0, 0, 0]];                                                *
 //                                                                             *
 // Working Out                                                                 *
 // - You start in the most far right position on level 1                       *
@@ -59,6 +60,61 @@ import assert from "node:assert"
 //******************************************************************************
 
 const escape = [
+  carpark => {
+    const dirs = [];
+
+    let i = carpark.findIndex(e => e.includes(2));
+    let pos = carpark[i].indexOf(2);
+
+    while (i < carpark.length) {
+      const stair = carpark[i].includes(1)
+        ? carpark[i].indexOf(1)
+        : carpark[i].length - 1;
+
+      const dir = stair - pos;
+      pos = stair;
+
+      dir > 0 && dirs.push(`R${dir}`);
+      dir < 0 && dirs.push(`L${-dir}`);
+
+      if (i++ >= carpark.length - 1) continue
+      const down = +dirs.at(-1).match(/D(\d+)/)?.at(1);
+
+      !dir && down
+        ? dirs[dirs.length - 1] = `D${down + 1}`
+        : dirs.push("D1");
+    }
+
+    return dirs;
+  },
+
+  carpark => carpark.reduce(({ pos, start, dirs }, floor, i) => {
+    if (i < start) return { pos, start, dirs };
+    if (i === start) pos = carpark[start].indexOf(2);
+
+    const stair = floor.includes(1)
+      ? floor.indexOf(1)
+      : floor.length - 1;
+
+    const dir = stair - pos
+    pos = stair;
+
+    dir > 0 && dirs.push(["R", dir]);
+    dir < 0 && dirs.push(["L", -dir]);
+
+    if (i >= carpark.length - 1) return { pos, start, dirs };
+
+    !dir && dirs.at(-1)[0] === "D"
+      ? dirs.at(-1)[1]++
+      : dirs.push(["D", 1]);
+
+    return { pos, start, dirs };
+  }, {
+    dirs: [],
+    start: carpark.findIndex(e => e.includes(2)),
+  })
+    .dirs
+    .map(e => e.join``),
 
 ];
 
@@ -67,29 +123,33 @@ const escape = [
 //******************************************************************************
 
 const tests = [
-carpark = [[1, 0, 0, 0, 2],
-           [0, 0, 0, 0, 0]];
-result = ["L4", "D1", "R4"];
-
-carpark = [[2, 0, 0, 1, 0],
-           [0, 0, 0, 1, 0],
-           [0, 0, 0, 0, 0]];
-result = ["R3", "D2", "R1"];
-
-carpark = [[0, 2, 0, 0, 1],
-           [0, 0, 0, 0, 1],
-           [0, 0, 0, 0, 1],
-           [0, 0, 0, 0, 0]];
-result = ["R3", "D3"];
-
-carpark = [[1, 0, 0, 0, 2],
-           [0, 0, 0, 0, 1],
-           [1, 0, 0, 0, 0],
-           [0, 0, 0, 0, 0]];
-result = ["L4", "D1", "R4", "D1", "L4", "D1", "R4"];
-
-carpark = [[0, 0, 0, 0, 2]];
-result = [];
+  [
+    [[0, 0, 0, 0, 0],
+    [1, 0, 0, 0, 2],
+    [0, 0, 0, 0, 0]],
+    ["L4", "D1", "R4"],
+  ], [
+    [[2, 0, 0, 1, 0],
+    [0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 0]],
+    ["R3", "D2", "R1"],
+  ], [
+    [[0, 2, 0, 0, 1],
+    [0, 0, 0, 0, 1],
+    [0, 0, 0, 0, 1],
+    [0, 0, 0, 0, 0]],
+    ["R3", "D3"],
+  ], [
+    [[1, 0, 0, 0, 2],
+    [0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0]],
+    ["L4", "D1", "R4", "D1", "L4", "D1", "R4"],
+  ], [
+    [[0, 0, 0, 0, 2]],
+    [],
+  ],
+];
 
 console.log("--- Running tests", "-".repeat(62));
 
